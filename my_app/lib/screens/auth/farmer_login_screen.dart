@@ -128,7 +128,7 @@ class _FarmerLoginScreenState extends State<FarmerLoginScreen> {
       ),
     );
   }
-
+ 
   void _handleLogin() {
     if (_formKey.currentState?.validate() ?? false) {
       // TODO: Implement actual login logic

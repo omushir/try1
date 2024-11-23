@@ -3,6 +3,7 @@ import 'add_product_screen.dart';
 import 'my_products_screen.dart';
 import 'orders_screen.dart';
 import 'profile_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class FarmerDashboard extends StatelessWidget {
   const FarmerDashboard({super.key});
@@ -48,7 +49,11 @@ class FarmerDashboard extends StatelessWidget {
             icon: Icons.person,
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const FarmerProfileScreen()),
+              MaterialPageRoute(
+                builder: (_) => ProfileScreen(
+                  user: FirebaseAuth.instance.currentUser!,
+                ),
+              ),
             ),
           ),
         ],

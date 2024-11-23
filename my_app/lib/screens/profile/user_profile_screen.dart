@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
-class ProfileScreen extends StatefulWidget {
-  final User user;
+class UserProfileScreen extends StatefulWidget {
+  final String userEmail;
   
-  const ProfileScreen({
+  const UserProfileScreen({
     super.key,
-    required this.user,
+    required this.userEmail,
   });
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  State<UserProfileScreen> createState() => _UserProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _UserProfileScreenState extends State<UserProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -22,14 +21,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _emailController.text = widget.user.email ?? '';
+    _emailController.text = widget.userEmail;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Profile'),
+        title: const Text('Profile'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -82,7 +81,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
-                    // TODO: Implement profile update logic
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Profile Updated Successfully')),
                     );

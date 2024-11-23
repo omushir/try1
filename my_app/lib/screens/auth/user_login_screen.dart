@@ -134,7 +134,11 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
       // TODO: Implement actual login logic
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
+        MaterialPageRoute(
+          builder: (context) => HomeScreen(
+            userEmail: _emailController.text,
+          ),
+        ),
       );
     }
   }

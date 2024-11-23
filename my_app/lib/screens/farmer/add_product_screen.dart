@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+extension StringExtension on String {
+  String capitalize() {
+    return "${this[0].toUpperCase()}${substring(1)}";
+  }
+}
 
 class AddProductScreen extends StatefulWidget {
-  const AddProductScreen({super.key});
+  const AddProductScreen({Key? key}) : super(key: key);
 
   @override
   State<AddProductScreen> createState() => _AddProductScreenState();
@@ -9,11 +17,72 @@ class AddProductScreen extends StatefulWidget {
 
 class _AddProductScreenState extends State<AddProductScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  final _priceController = TextEditingController();
-  final _stockController = TextEditingController();
-  String _selectedUnit = 'kg';
+  bool _isLoading = false;
+
+  final TextEditingController _productnameController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _priceController = TextEditingController();
+  final TextEditingController _stockController = TextEditingController();
+  final TextEditingController _imageController = TextEditingController();
+
+  String _selectedCategory = 'vegetables';
+  final List<String> _categories = ['vegetables', 'fruits', 'grains', 'dairy', 'orders'];
+
+  Future<void> _submitProduct() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      try {
+        final userId = FirebaseAuth.instance.currentUser?.uid;
+        await FirebaseFirestore.instance.collection('products').add({
+          'name': _productnameController.text.trim(),
+          'price': _priceController.text.trim(),
+          'category': _selectedCategory,
+          'imageUrl': _imageController.text.trim(),
+          'userId': userId,
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Product added successfully!')),
+          );
+          _clearForm();
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error adding product: $e')),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
+    }
+  }
+
+  void _clearForm() {
+    _productnameController.clear();
+    _descriptionController.clear();
+    _priceController.clear();
+    _stockController.clear();
+    _imageController.clear();
+  }
+
+  @override
+  void dispose() {
+    _productnameController.dispose();
+    _descriptionController.dispose();
+    _priceController.dispose();
+    _stockController.dispose();
+    _imageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,120 +90,75 @@ class _AddProductScreenState extends State<AddProductScreen> {
       appBar: AppBar(
         title: const Text('Add Product'),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextButton.icon(
-                onPressed: () {
-                  // TODO: Implement image picker
-                },
-                icon: const Icon(Icons.add_photo_alternate),
-                label: const Text('Add Product Images'),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Product Name',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value?.isEmpty ?? true) {
-                    return 'Please enter product name';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Description',
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 3,
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _priceController,
-                      decoration: const InputDecoration(
-                        labelText: 'Price',
-                        border: OutlineInputBorder(),
-                        prefixText: '₹',
-                      ),
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value?.isEmpty ?? true) {
-                          return 'Please enter price';
-                        }
-                        return null;
-                      },
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    TextFormField(
+                      controller: _productnameController,
+                      decoration: const InputDecoration(labelText: 'Product Name'),
+                      validator: (value) =>
+                          value?.isEmpty ?? true ? 'Please enter product name' : null,
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  DropdownButton<String>(
-                    value: _selectedUnit,
-                    items: ['kg', 'gram', 'piece']
-                        .map((unit) => DropdownMenuItem(
-                              value: unit,
-                              child: Text(unit),
-                            ))
-                        .toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedUnit = value!;
-                      });
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _stockController,
-                decoration: const InputDecoration(
-                  labelText: 'Available Stock',
-                  border: OutlineInputBorder(),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _descriptionController,
+                      decoration: const InputDecoration(labelText: 'Description'),
+                      validator: (value) =>
+                          value?.isEmpty ?? true ? 'Please enter description' : null,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _priceController,
+                      decoration: const InputDecoration(labelText: 'Price'),
+                      keyboardType: TextInputType.number,
+                      validator: (value) =>
+                          value?.isEmpty ?? true ? 'Please enter price' : null,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _stockController,
+                      decoration: const InputDecoration(labelText: 'Stock'),
+                      validator: (value) =>
+                          value?.isEmpty ?? true ? 'Please enter stock' : null,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _imageController,
+                      decoration: const InputDecoration(labelText: 'Image URL'),
+                      validator: (value) =>
+                          value?.isEmpty ?? true ? 'Please enter image URL' : null,
+                    ),
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<String>(
+                      value: _selectedCategory,
+                      decoration: const InputDecoration(labelText: 'Category'),
+                      items: _categories.map((String category) {
+                        return DropdownMenuItem(
+                          value: category,
+                          child: Text(category.capitalize()),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          _selectedCategory = newValue!;
+                        });
+                      },
+                      validator: (value) => value == null ? 'Please select a category' : null,
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: _submitProduct,
+                      child: const Text('Add Product'),
+                    ),
+                  ],
                 ),
-                keyboardType: TextInputType.number,
               ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _submitForm,
-                child: const Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Text('Add Product'),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
-  }
-
-  void _submitForm() {
-    if (_formKey.currentState?.validate() ?? false) {
-      // TODO: Implement product submission
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Product added successfully')),
-      );
-      Navigator.pop(context);
-    }
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _descriptionController.dispose();
-    _priceController.dispose();
-    _stockController.dispose();
-    super.dispose();
   }
 } 
