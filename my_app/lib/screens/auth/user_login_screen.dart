@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../home/home_screen.dart';  // Updated import path
+import '../auth/user_registration_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class UserLoginScreen extends StatefulWidget {
   const UserLoginScreen({super.key});
@@ -13,6 +15,31 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+
+  Future<void> _handleForgotPassword() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter your email first')),
+      );
+      return;
+    }
+
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Password reset email sent')),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message ?? 'Failed to send reset email')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -92,9 +119,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
               ),
               SizedBox(height: screenSize.height * 0.02),
               TextButton(
-                onPressed: () {
-                  // TODO: Implement forgot password
-                },
+                onPressed: _handleForgotPassword,
                 child: const Text('Forgot Password?'),
               ),
               SizedBox(height: screenSize.height * 0.03),
@@ -116,7 +141,12 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
                   const Text("Don't have an account? "),
                   TextButton(
                     onPressed: () {
-                      // TODO: Navigate to registration
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const UserRegistrationScreen(),
+                        ),
+                      );
                     },
                     child: const Text('Register'),
                   ),

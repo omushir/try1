@@ -23,6 +23,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     _emailController.text = widget.user.email ?? '';
+    _nameController.text = widget.user.displayName ?? '';
   }
 
   @override
@@ -30,6 +31,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Profile'),
+        backgroundColor: Colors.green,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -39,7 +41,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               const CircleAvatar(
                 radius: 50,
-                child: Icon(Icons.person, size: 50),
+                backgroundColor: Colors.green,
+                child: Icon(Icons.person, size: 50, color: Colors.white),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                widget.user.email ?? 'No email',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey[600],
+                ),
               ),
               const SizedBox(height: 20),
               TextFormField(

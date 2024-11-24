@@ -3,6 +3,9 @@ import '../profile/user_profile_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../product/product_details_screen.dart';
 import '../cart/cart_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../auth/login_selection_screen.dart';
+import '../orders/my_orders_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final String userEmail;
@@ -212,7 +215,12 @@ class _HomeScreenState extends State<HomeScreen> {
             leading: const Icon(Icons.shopping_bag),
             title: const Text('My Orders'),
             onTap: () {
-              // TODO: Navigate to orders
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => MyOrdersScreen(userEmail: widget.userEmail),
+                ),
+              );
             },
           ),
           ListTile(
@@ -240,8 +248,14 @@ class _HomeScreenState extends State<HomeScreen> {
           ListTile(
             leading: const Icon(Icons.logout),
             title: const Text('Logout'),
-            onTap: () {
-              // TODO: Implement logout
+            onTap: () async {
+              await FirebaseAuth.instance.signOut();
+              if (context.mounted) {
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (context) => const LoginSelectionScreen()),
+                  (route) => false,
+                );
+              }
             },
           ),
         ],

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../farmer/farmer_dashboard.dart';
+import 'farmer_registration_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class FarmerLoginScreen extends StatefulWidget {
   const FarmerLoginScreen({super.key});
@@ -92,9 +94,7 @@ class _FarmerLoginScreenState extends State<FarmerLoginScreen> {
               ),
               SizedBox(height: screenSize.height * 0.02),
               TextButton(
-                onPressed: () {
-                  // TODO: Implement forgot password
-                },
+                onPressed: _handleForgotPassword,
                 child: const Text('Forgot Password?'),
               ),
               SizedBox(height: screenSize.height * 0.03),
@@ -116,7 +116,10 @@ class _FarmerLoginScreenState extends State<FarmerLoginScreen> {
                   const Text("Don't have an account? "),
                   TextButton(
                     onPressed: () {
-                      // TODO: Navigate to registration
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const FarmerRegistrationScreen()),
+                      );
                     },
                     child: const Text('Register'),
                   ),
@@ -136,6 +139,38 @@ class _FarmerLoginScreenState extends State<FarmerLoginScreen> {
         context,
         MaterialPageRoute(builder: (context) => const FarmerDashboard()),
       );
+    }
+  }
+
+  Future<void> _handleForgotPassword() async {
+    final email = _emailController.text.trim();
+    
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter your email first')),
+      );
+      return;
+    }
+
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Password reset email sent. Please check your inbox.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message ?? 'Failed to send reset email'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
